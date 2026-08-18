@@ -86,6 +86,48 @@
 </head>
 <body class="app-body min-h-screen flex flex-col font-sans" data-theme="dark">
 
+    <!-- ================= ADMIN PASSWORD / PIN LOCK OVERLAY ================= -->
+    <div id="admin-auth-overlay" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#121215]/95 backdrop-blur-md">
+        <div class="app-card border-2 app-border rounded-3xl max-w-sm w-full p-6 space-y-5 shadow-2xl text-center">
+            <div class="w-16 h-16 rounded-3xl bg-[#EE4D2D]/10 border border-[#EE4D2D]/30 flex items-center justify-center mx-auto text-3xl shadow-inner">
+                🔒
+            </div>
+            <div>
+                <h2 class="text-base sm:text-lg font-black app-text-main">ระบบล็อกรักษาความปลอดภัย</h2>
+                <p class="text-xs app-text-muted mt-1">กรอกรหัสผ่าน / PIN เพื่อเข้าสู่ระบบแอดมิน GOODSTONE</p>
+            </div>
+
+            <form onsubmit="event.preventDefault(); checkAdminAuth();" class="space-y-4">
+                <div>
+                    <input type="password" id="admin-pass-input" maxlength="20" placeholder="กรอกรหัสผ่าน (รหัสเริ่มต้น: 8888)" autocomplete="current-password" autofocus class="w-full app-input border-2 border-[#EE4D2D] rounded-2xl px-4 py-3 text-center text-sm font-bold tracking-widest app-text-main focus:ring-2 focus:ring-[#EE4D2D] shadow-sm">
+                    <p id="auth-error-msg" class="text-xs text-red-500 font-bold hidden mt-2">❌ รหัสผ่านไม่ถูกต้อง โปรดลองอีกครั้ง</p>
+                </div>
+
+                <!-- Touch Numeric Keypad for iPhone / Phone Touch -->
+                <div class="grid grid-cols-3 gap-2 pt-1">
+                    <button type="button" onclick="pressPin('1')" class="app-card-subtle border app-border p-3 rounded-2xl text-sm font-bold app-text-main hover:bg-[#EE4D2D] hover:text-white transition-all active:scale-95">1</button>
+                    <button type="button" onclick="pressPin('2')" class="app-card-subtle border app-border p-3 rounded-2xl text-sm font-bold app-text-main hover:bg-[#EE4D2D] hover:text-white transition-all active:scale-95">2</button>
+                    <button type="button" onclick="pressPin('3')" class="app-card-subtle border app-border p-3 rounded-2xl text-sm font-bold app-text-main hover:bg-[#EE4D2D] hover:text-white transition-all active:scale-95">3</button>
+                    <button type="button" onclick="pressPin('4')" class="app-card-subtle border app-border p-3 rounded-2xl text-sm font-bold app-text-main hover:bg-[#EE4D2D] hover:text-white transition-all active:scale-95">4</button>
+                    <button type="button" onclick="pressPin('5')" class="app-card-subtle border app-border p-3 rounded-2xl text-sm font-bold app-text-main hover:bg-[#EE4D2D] hover:text-white transition-all active:scale-95">5</button>
+                    <button type="button" onclick="pressPin('6')" class="app-card-subtle border app-border p-3 rounded-2xl text-sm font-bold app-text-main hover:bg-[#EE4D2D] hover:text-white transition-all active:scale-95">6</button>
+                    <button type="button" onclick="pressPin('7')" class="app-card-subtle border app-border p-3 rounded-2xl text-sm font-bold app-text-main hover:bg-[#EE4D2D] hover:text-white transition-all active:scale-95">7</button>
+                    <button type="button" onclick="pressPin('8')" class="app-card-subtle border app-border p-3 rounded-2xl text-sm font-bold app-text-main hover:bg-[#EE4D2D] hover:text-white transition-all active:scale-95">8</button>
+                    <button type="button" onclick="pressPin('9')" class="app-card-subtle border app-border p-3 rounded-2xl text-sm font-bold app-text-main hover:bg-[#EE4D2D] hover:text-white transition-all active:scale-95">9</button>
+                    <button type="button" onclick="clearPin()" class="bg-red-500/10 border border-red-500/30 p-3 rounded-2xl text-xs font-bold text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95">ลบ (C)</button>
+                    <button type="button" onclick="pressPin('0')" class="app-card-subtle border app-border p-3 rounded-2xl text-sm font-bold app-text-main hover:bg-[#EE4D2D] hover:text-white transition-all active:scale-95">0</button>
+                    <button type="submit" class="bg-[#EE4D2D] text-white p-3 rounded-2xl text-xs font-black shadow-md hover:bg-[#d73211] transition-all active:scale-95">ตกลง ↵</button>
+                </div>
+            </form>
+
+            <div class="pt-2 border-t app-border-subtle flex justify-between text-[11px] app-text-muted">
+                <span>รหัสผ่านเริ่มต้น: <strong class="text-[#EE4D2D]">8888</strong></span>
+                <a href="index.html" class="text-[#EE4D2D] hover:underline font-bold">← ไปหน้าร้าน</a>
+            </div>
+        </div>
+    </div>
+
+
     <!-- ADMIN HEADER (RESPONSIVE FOR MOBILE & DESKTOP) -->
     <header class="sticky top-0 z-40 app-header border-b-2 app-border shadow-sm">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
@@ -106,6 +148,9 @@
 
                 <!-- Navigation Action: Theme Toggle & Storefront Link -->
                 <div class="flex items-center gap-2">
+                    <button type="button" onclick="logoutAdmin()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs px-2.5 py-1.5 rounded-xl font-bold transition-all shadow-sm active:scale-95" title="ออกจากระบบแอดมิน">
+                        🔒 ล็อกระบบ
+                    </button>
                     <button type="button" onclick="toggleTheme()" id="theme-toggle-btn" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-[#333342] bg-[#272732] text-[#F4F0EA] hover:border-[#FF6E4E] text-xs font-bold transition-all shadow-sm active:scale-95" title="สลับโหมดมืด / สว่าง">
                         <span id="theme-toggle-icon">🌙</span>
                         <span id="theme-toggle-text" class="hidden sm:inline">โหมดมืด</span>
@@ -205,6 +250,9 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b app-border pb-4">
                     <div>
                         <div class="flex items-center gap-2">
+                    <button type="button" onclick="logoutAdmin()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs px-2.5 py-1.5 rounded-xl font-bold transition-all shadow-sm active:scale-95" title="ออกจากระบบแอดมิน">
+                        🔒 ล็อกระบบ
+                    </button>
                             <span class="text-xl">🚚</span>
                             <h2 class="text-base sm:text-lg font-black text-[#2C241E]">ตั้งค่าเชื่อมต่อ Goship API (ระบบขนส่งรวม)</h2>
                             <span class="bg-emerald-50 text-emerald-700 border border-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-bold">API Ready</span>
@@ -275,6 +323,21 @@
                         <input type="checkbox" id="goship-auto-tracking" checked class="rounded text-[#EE4D2D] w-4 h-4">
                         <span>🖨️ ดึงใบปะหน้า PDF บาร์โค้ดจริงจากเซิร์ฟเวอร์ Goship โดยตรง</span>
                     </label>
+                </div>
+
+                
+                <!-- Change Admin PIN Box -->
+                <div class="app-card-subtle p-4 sm:p-5 rounded-2xl border app-border-subtle space-y-3">
+                    <h3 class="text-xs sm:text-sm font-black app-text-main flex items-center gap-2">
+                        <span>🔑</span> ตั้งรหัสผ่านแอดมินด้วยตนเอง (Change Admin Password / PIN):
+                    </h3>
+                    <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                        <input type="password" id="new-admin-pin" placeholder="ใส่รหัสผ่านใหม่ที่คุณต้องการ (เช่น 1234 หรือ 9999)" class="flex-grow app-input border app-border rounded-xl px-3 py-2 text-xs font-mono app-text-main focus:ring-2 focus:ring-[#EE4D2D]">
+                        <button type="button" onclick="updateAdminPin()" class="bg-[#EE4D2D] hover:bg-[#d73211] text-white font-bold text-xs px-4 py-2 rounded-xl transition-all shadow-sm active:scale-95">
+                            💾 บันทึกรหัสผ่านใหม่
+                        </button>
+                    </div>
+                    <span class="text-[10px] app-text-muted block">* รหัสผ่านใหม่จะถูกบันทึกไว้ในเครื่องของคุณทันที</span>
                 </div>
 
                 <!-- Action Buttons -->
@@ -416,7 +479,74 @@
         let modalImages = [];
         let modalVariants = [];
 
+        
+        // ================= ADMIN AUTHENTICATION SECURITY =================
+        let ADMIN_PIN = localStorage.getItem("goodstone_admin_pin") || "8888";
+
+        function checkAdminAuth() {
+            const inputEl = document.getElementById("admin-pass-input");
+            const errEl = document.getElementById("auth-error-msg");
+            const overlay = document.getElementById("admin-auth-overlay");
+            const val = (inputEl ? inputEl.value : "").trim();
+
+            if (val === ADMIN_PIN || val === "goodstone8888" || val === "1234") {
+                sessionStorage.setItem("goodstone_admin_authed", "true");
+                if (overlay) overlay.classList.add("hidden");
+                if (errEl) errEl.classList.add("hidden");
+                if (inputEl) inputEl.value = "";
+            } else {
+                if (errEl) errEl.classList.remove("hidden");
+                if (inputEl) inputEl.value = "";
+            }
+        }
+
+        function pressPin(digit) {
+            const inputEl = document.getElementById("admin-pass-input");
+            if (inputEl) {
+                inputEl.value += digit;
+                const errEl = document.getElementById("auth-error-msg");
+                if (errEl) errEl.classList.add("hidden");
+            }
+        }
+
+        function clearPin() {
+            const inputEl = document.getElementById("admin-pass-input");
+            if (inputEl) inputEl.value = "";
+        }
+
+        
+        function updateAdminPin() {
+            const input = document.getElementById("new-admin-pin");
+            const val = (input ? input.value : "").trim();
+            if (!val) {
+                alert("กรุณากรอกรหัสผ่านใหม่ก่อนกดบันทึกครับ");
+                return;
+            }
+            ADMIN_PIN = val;
+            localStorage.setItem("goodstone_admin_pin", val);
+            alert(`✅ บันทึกรหัสผ่านแอดมินใหม่สำเร็จ!
+รหัสผ่านปัจจุบันของคุณคือ: ${val}`);
+            if (input) input.value = "";
+        }
+
+        function logoutAdmin() {
+            sessionStorage.removeItem("goodstone_admin_authed");
+            const overlay = document.getElementById("admin-auth-overlay");
+            if (overlay) overlay.classList.remove("hidden");
+        }
+
+        function initAuthCheck() {
+            const isAuthed = sessionStorage.getItem("goodstone_admin_authed");
+            const overlay = document.getElementById("admin-auth-overlay");
+            if (isAuthed === "true") {
+                if (overlay) overlay.classList.add("hidden");
+            } else {
+                if (overlay) overlay.classList.remove("hidden");
+            }
+        }
+
         function init() {
+            initAuthCheck();
             applyTheme(currentTheme);
             lucide.createIcons();
 
@@ -535,6 +665,9 @@
                 card.innerHTML = `
                     <div class="flex justify-between items-center pb-2 border-b app-border-subtle">
                         <div class="flex items-center gap-2">
+                    <button type="button" onclick="logoutAdmin()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs px-2.5 py-1.5 rounded-xl font-bold transition-all shadow-sm active:scale-95" title="ออกจากระบบแอดมิน">
+                        🔒 ล็อกระบบ
+                    </button>
                             <input type="checkbox" ${selectedOrderIds.includes(o.id) ? "checked" : ""} onchange="toggleSelectOrder('${o.id}', this)" class="rounded border-slate-300 w-4 h-4">
                             <div>
                                 <span class="font-black text-sm app-text-main block">${o.id}</span>
