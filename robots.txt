@@ -1,0 +1,15 @@
+# Robots.txt for GOODSTONE SHOP (https://goodstone-slingshot.com/)
+User-agent: *
+Allow: /
+Allow: /track.html
+Allow: /index.html
+Disallow: /admin.html
+Disallow: /api/admin/
+
+# Googlebot specific
+User-agent: Googlebot
+Allow: /
+Disallow: /admin.html
+
+# Sitemap location for Google Search Console
+Sitemap: https://goodstone-slingshot.com/sitemap.xml
