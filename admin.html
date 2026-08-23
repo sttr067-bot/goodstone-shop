@@ -1009,7 +1009,7 @@
             const url = prompt("กรุณาวางลิงก์รูปภาพ (URL / Google Drive / Shopee Image / Web Link):");
             if (!url || !url.trim()) return;
             const cleanUrl = url.trim();
-            modalImages.push({
+            modalImages.unshift({
                 file: cleanUrl,
                 name: `url_img_${Date.now()}.jpg`,
                 fallback: cleanUrl
@@ -1042,7 +1042,8 @@
                         ctx.drawImage(img, 0, 0, w, h);
                         const compressedBase64 = canvas.toDataURL("image/jpeg", 0.65);
 
-                        modalImages.push({
+                        // Put newly uploaded image at index 0 as main cover image
+                        modalImages.unshift({
                             file: compressedBase64,
                             name: file.name,
                             fallback: compressedBase64
@@ -1093,6 +1094,24 @@
             renderModalVariants();
         }
 
+                function cleanProductsForStorage(prods) {
+            return prods.map(p => {
+                const clone = JSON.parse(JSON.stringify(p));
+                // Ensure image_file and fallback_image are identical
+                if (clone.image_file) {
+                    clone.fallback_image = clone.image_file;
+                }
+                if (clone.images && Array.isArray(clone.images)) {
+                    clone.images.forEach(img => {
+                        if (img.file) {
+                            img.fallback = img.file;
+                        }
+                    });
+                }
+                return clone;
+            });
+        }
+
         function saveProductModal() {
             const id = document.getElementById("edit-prod-id").value;
             const p = products.find(x => x.id === id);
@@ -1108,20 +1127,22 @@
             p.price = minPrice > 0 ? minPrice : p.price;
             p.stock = totalStock > 0 ? totalStock : p.stock;
 
-            if (modalImages.length > 0) {
+            if (modalImages && modalImages.length > 0) {
                 p.images = modalImages;
-            if (modalImages.length > 0) p.image_file = modalImages[0].file;
-                p.image_file = modalImages[0].file;
-                p.fallback_image = modalImages[0].fallback || modalImages[0].file;
+                const coverImg = modalImages[0].file || modalImages[0].fallback;
+                p.image_file = coverImg;
+                p.fallback_image = coverImg;
             }
 
             try {
-                localStorage.setItem("goodstone_products", JSON.stringify(products));
+                const cleanedProducts = cleanProductsForStorage(products);
+                localStorage.setItem("goodstone_products", JSON.stringify(cleanedProducts));
                 closeProductModal();
                 renderInventoryView();
-                alert("💾 บันทึกรูปภาพและข้อมูลสินค้าเรียบร้อยแล้วครับ!");
+                alert("💾 บันทึกรูปภาพเรียบร้อยแล้ว! (รูปภาพใหม่จะคงอยู่ถาวรแม้กดรีเฟรช)");
             } catch(e) {
-                alert("⚠️ คำเตือน: ไฟล์รูปภาพยังมีขนาดใหญ่เกินไป ลองใช้รูปภาพที่เล็กลง หรือกดปุ่ม '+ วางลิงก์ URL' ครับ");
+                console.error("LocalStorage save error:", e);
+                alert("⚠️ บันทึกไม่สำเร็จ: ไฟล์รูปภาพมีขนาดใหญ่เกินไปเล็กน้อย กรุณาลบรูปภาพออกบางรูปก่อนครับ");
                 closeProductModal();
                 renderInventoryView();
             }
