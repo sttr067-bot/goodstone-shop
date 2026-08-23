@@ -307,7 +307,7 @@
             <div class="grid grid-cols-1 md:grid-cols-12 gap-6 theme-card border-2 rounded-3xl p-4 sm:p-7 shadow-sm">
                 <!-- Gallery Slider -->
                 <div class="md:col-span-5 space-y-3">
-                    <div class="relative w-full h-64 sm:h-72 theme-card-subtle rounded-2xl border theme-border p-3 flex items-center justify-center overflow-hidden cursor-pointer group" onclick="openGalleryModal()">
+                    <div class="relative w-full h-64 sm:h-72 theme-card-subtle rounded-2xl border theme-border p-3 flex items-center justify-center overflow-hidden cursor-pointer group" onclick="openGalleryModal(currentGalleryIdx)">
                         <img id="checkout-main-img" src="" alt="สินค้า" class="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105">
                         <div class="absolute bottom-2.5 right-2.5 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2.5 py-1 rounded-lg flex items-center gap-1">
                             <i data-lucide="zoom-in" class="w-3 h-3"></i><span>แตะดูรูปใหญ่</span>
@@ -609,12 +609,30 @@
     </footer>
 
     <!-- FULLSCREEN GALLERY LIGHTBOX MODAL -->
-    <div id="gallery-modal" class="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm hidden" onclick="closeGalleryModal()">
-        <div class="relative max-w-2xl max-h-[85vh] p-2 bg-white dark:bg-[#1E1E26] rounded-3xl border-2 theme-border shadow-2xl" onclick="event.stopPropagation()">
-            <button onclick="closeGalleryModal()" class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-[#EE4D2D] text-white font-bold flex items-center justify-center shadow-lg cursor-pointer"><i data-lucide="x" class="w-4 h-4"></i></button>
-            <img id="gallery-modal-img" src="" class="max-h-[75vh] max-w-full rounded-2xl object-contain mx-auto">
+    <div id="gallery-modal" class="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/85 backdrop-blur-sm hidden" onclick="closeGalleryModal()">
+        <div class="relative w-full max-w-2xl" onclick="event.stopPropagation()">
+            <!-- Close button -->
+            <button onclick="closeGalleryModal()" class="absolute -top-10 right-0 w-9 h-9 rounded-full bg-[#EE4D2D] text-white font-bold flex items-center justify-center shadow-lg cursor-pointer z-10">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+
+            <!-- Image counter -->
+            <div id="gallery-modal-counter" class="absolute -top-10 left-0 text-white text-sm font-bold px-3 py-1 bg-black/50 rounded-full"></div>
+
+            <!-- Image -->
+            <img id="gallery-modal-img" src="" class="max-h-[80vh] max-w-full rounded-2xl object-contain mx-auto block shadow-2xl">
+
+            <!-- Prev button -->
+            <button id="gallery-prev-btn" onclick="galleryNav(-1)" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center shadow-lg cursor-pointer transition-all active:scale-90 text-xl font-bold">‹</button>
+
+            <!-- Next button -->
+            <button id="gallery-next-btn" onclick="galleryNav(1)" class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center shadow-lg cursor-pointer transition-all active:scale-90 text-xl font-bold">›</button>
+
+            <!-- Dot indicators -->
+            <div id="gallery-modal-dots" class="flex justify-center gap-1.5 mt-3"></div>
         </div>
     </div>
+
 
     <!-- JAVASCRIPT ENGINE -->
     <script>
@@ -878,9 +896,11 @@
                     currentGalleryIdx = idx;
                     document.getElementById("checkout-main-img").src = img.file;
                     renderProductCheckoutDetail();
+                    // Double-tap thumbnail to open lightbox at that index
                 };
                 thumbsContainer.appendChild(btn);
             });
+
 
             // Render Variants Pills
             const variantsContainer = document.getElementById("checkout-variants-container");
@@ -1507,19 +1527,73 @@
         }
 
         // ================= GALLERY MODAL =================
-        function openGalleryModal() {
+        let galleryImages = [];
+        let galleryCurrentIdx = 0;
+        let galleryTouchStartX = 0;
+
+        function openGalleryModal(startIdx) {
             if (!selectedProduct) return;
             const p = selectedProduct;
-            const imgs = (p.images && p.images.length > 0)
+            galleryImages = (p.images && p.images.length > 0)
                 ? p.images
                 : [{ file: p.image_file || p.fallback_image, name: `${p.id}_main.jpg` }];
 
-            document.getElementById("gallery-modal-img").src = imgs[currentGalleryIdx]?.file || imgs[0].file;
+            galleryCurrentIdx = (typeof startIdx === 'number') ? startIdx : (currentGalleryIdx || 0);
+            renderGalleryModal();
             document.getElementById("gallery-modal").classList.remove("hidden");
+
+            // Touch/swipe support
+            const modalEl = document.getElementById("gallery-modal");
+            modalEl.addEventListener("touchstart", e => { galleryTouchStartX = e.touches[0].clientX; }, { passive: true });
+            modalEl.addEventListener("touchend", e => {
+                const dx = e.changedTouches[0].clientX - galleryTouchStartX;
+                if (Math.abs(dx) > 50) galleryNav(dx < 0 ? 1 : -1);
+            }, { passive: true });
+
+            // Keyboard arrow support
+            document.onkeydown = e => {
+                if (!document.getElementById("gallery-modal").classList.contains("hidden")) {
+                    if (e.key === "ArrowRight") galleryNav(1);
+                    if (e.key === "ArrowLeft") galleryNav(-1);
+                    if (e.key === "Escape") closeGalleryModal();
+                }
+            };
+        }
+
+        function renderGalleryModal() {
+            const imgs = galleryImages;
+            const idx = galleryCurrentIdx;
+            const img = imgs[idx];
+            document.getElementById("gallery-modal-img").src = img?.file || img?.fallback || "";
+            document.getElementById("gallery-modal-counter").innerText = imgs.length > 1 ? `${idx + 1} / ${imgs.length}` : "";
+
+            // Dots
+            const dotsEl = document.getElementById("gallery-modal-dots");
+            dotsEl.innerHTML = "";
+            if (imgs.length > 1) {
+                imgs.forEach((_, i) => {
+                    const dot = document.createElement("button");
+                    dot.className = `w-2 h-2 rounded-full transition-all cursor-pointer ${i === idx ? 'bg-white scale-125' : 'bg-white/40'}`;
+                    dot.onclick = (e) => { e.stopPropagation(); galleryCurrentIdx = i; renderGalleryModal(); };
+                    dotsEl.appendChild(dot);
+                });
+            }
+
+            // Show/hide prev-next buttons
+            document.getElementById("gallery-prev-btn").style.display = imgs.length > 1 ? "flex" : "none";
+            document.getElementById("gallery-next-btn").style.display = imgs.length > 1 ? "flex" : "none";
+        }
+
+        function galleryNav(dir) {
+            const total = galleryImages.length;
+            if (total <= 1) return;
+            galleryCurrentIdx = (galleryCurrentIdx + dir + total) % total;
+            renderGalleryModal();
         }
 
         function closeGalleryModal() {
             document.getElementById("gallery-modal").classList.add("hidden");
+            document.onkeydown = null;
         }
 
         window.onload = init;
