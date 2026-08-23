@@ -605,14 +605,20 @@
 
         function init() {
             initAuthCheck();
-            applyTheme(currentTheme);
             lucide.createIcons();
 
             const savedProds = localStorage.getItem("goodstone_products");
             if (savedProds) {
-                try { products = JSON.parse(savedProds); } catch(e) {}
+                try {
+                    products = JSON.parse(savedProds);
+                    // Re-clean every load to strip any leftover SVG blobs from old saves
+                    products = cleanProductsForStorage(products);
+                    localStorage.setItem("goodstone_products", JSON.stringify(products));
+                } catch(e) { products = cleanProductsForStorage(DEFAULT_PRODUCTS); }
             } else {
-                localStorage.setItem("goodstone_products", JSON.stringify(DEFAULT_PRODUCTS));
+                // Strip SVG blobs from DEFAULT_PRODUCTS before first save
+                products = cleanProductsForStorage(DEFAULT_PRODUCTS);
+                localStorage.setItem("goodstone_products", JSON.stringify(products));
             }
 
             const savedOrders = localStorage.getItem("goodstone_orders");
