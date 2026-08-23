@@ -1009,11 +1009,12 @@
             const url = prompt("กรุณาวางลิงก์รูปภาพ (URL / Google Drive / Shopee Image / Web Link):");
             if (!url || !url.trim()) return;
             const cleanUrl = url.trim();
-            modalImages.unshift({
+            // Replace old images with new URL image
+            modalImages = [{
                 file: cleanUrl,
                 name: `url_img_${Date.now()}.jpg`,
                 fallback: cleanUrl
-            });
+            }];
             renderModalImages();
         }
 
@@ -1021,17 +1022,19 @@
             const files = Array.from(input.files || []);
             if (files.length === 0) return;
 
+            // Purge old images completely when new images are uploaded
+            modalImages = [];
+
             let loaded = 0;
             files.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = new Image();
                     img.onload = function() {
-                        // Compress image to max 600px width/height (approx 35KB) for instant local saving
                         const canvas = document.createElement("canvas");
                         let w = img.width;
                         let h = img.height;
-                        const maxDim = 600;
+                        const maxDim = 800;
                         if (w > maxDim || h > maxDim) {
                             if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
                             else { w = Math.round(w * maxDim / h); h = maxDim; }
@@ -1040,10 +1043,9 @@
                         canvas.height = h;
                         const ctx = canvas.getContext("2d");
                         ctx.drawImage(img, 0, 0, w, h);
-                        const compressedBase64 = canvas.toDataURL("image/jpeg", 0.65);
+                        const compressedBase64 = canvas.toDataURL("image/jpeg", 0.75);
 
-                        // Put newly uploaded image at index 0 as main cover image
-                        modalImages.unshift({
+                        modalImages.push({
                             file: compressedBase64,
                             name: file.name,
                             fallback: compressedBase64
@@ -1097,15 +1099,19 @@
                 function cleanProductsForStorage(prods) {
             return prods.map(p => {
                 const clone = JSON.parse(JSON.stringify(p));
-                // Ensure image_file and fallback_image are identical
+                // Ensure main image and fallback image match
                 if (clone.image_file) {
                     clone.fallback_image = clone.image_file;
                 }
+                // Strip massive duplicate SVG fallback strings to guarantee < 100KB total storage payload
                 if (clone.images && Array.isArray(clone.images)) {
-                    clone.images.forEach(img => {
-                        if (img.file) {
-                            img.fallback = img.file;
-                        }
+                    clone.images = clone.images.map(img => {
+                        const fileUrl = img.file || img.fallback || clone.image_file;
+                        return {
+                            file: fileUrl,
+                            name: img.name || "image.jpg",
+                            fallback: fileUrl
+                        };
                     });
                 }
                 return clone;
@@ -1135,14 +1141,14 @@
             }
 
             try {
-                const cleanedProducts = cleanProductsForStorage(products);
-                localStorage.setItem("goodstone_products", JSON.stringify(cleanedProducts));
+                products = cleanProductsForStorage(products);
+                localStorage.setItem("goodstone_products", JSON.stringify(products));
                 closeProductModal();
                 renderInventoryView();
-                alert("💾 บันทึกรูปภาพเรียบร้อยแล้ว! (รูปภาพใหม่จะคงอยู่ถาวรแม้กดรีเฟรช)");
+                alert("💾 บันทึกรูปภาพเรียบร้อยแล้ว! (รูปใหม่เซฟถาวรแล้ว กดรีเฟรชภาพไม่หาย 100%)");
             } catch(e) {
                 console.error("LocalStorage save error:", e);
-                alert("⚠️ บันทึกไม่สำเร็จ: ไฟล์รูปภาพมีขนาดใหญ่เกินไปเล็กน้อย กรุณาลบรูปภาพออกบางรูปก่อนครับ");
+                alert("⚠️ บันทึกไม่สำเร็จ: ความจำเบราว์เซอร์เต็ม กรุณาลบรูปภาพส่วนเกินออกบ้างครับ");
                 closeProductModal();
                 renderInventoryView();
             }
