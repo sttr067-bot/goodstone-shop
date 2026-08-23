@@ -1105,24 +1105,32 @@
             renderModalVariants();
         }
 
-                function cleanProductsForStorage(prods) {
+        function cleanProductsForStorage(prods) {
             return prods.map(p => {
                 const clone = JSON.parse(JSON.stringify(p));
-                // Ensure main image and fallback image match
-                if (clone.image_file) {
-                    clone.fallback_image = clone.image_file;
+
+                // Strip huge SVG data from fallback_image (keeps only real URL or base64 photo)
+                if (clone.fallback_image && clone.fallback_image.startsWith("data:image/svg")) {
+                    clone.fallback_image = clone.image_file || "";
                 }
-                // Strip massive duplicate SVG fallback strings to guarantee < 100KB total storage payload
-                if (clone.images && Array.isArray(clone.images)) {
+
+                // Clean each image in the images array
+                if (clone.images && clone.images.length > 0) {
                     clone.images = clone.images.map(img => {
-                        const fileUrl = img.file || img.fallback || clone.image_file;
+                        const isHugeSvg = (img.fallback || "").startsWith("data:image/svg");
                         return {
-                            file: fileUrl,
+                            file: img.file || "",
                             name: img.name || "image.jpg",
-                            fallback: fileUrl
+                            fallback: isHugeSvg ? (img.file || "") : (img.fallback || img.file || "")
                         };
                     });
+                    // Always sync image_file to the first (cover) image
+                    clone.image_file = clone.images[0].file || clone.image_file;
+                    clone.fallback_image = clone.image_file;
+                } else {
+                    clone.images = [];
                 }
+
                 return clone;
             });
         }
