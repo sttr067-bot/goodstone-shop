@@ -454,11 +454,16 @@
                             <span class="text-[10px] text-slate-500">รูปแรกคือรูปหน้าปก</span>
                         </div>
                         
-                        <!-- Direct Visible Upload Button for Phones -->
-                        <label class="bg-[#EE4D2D] hover:bg-[#d73211] text-white text-xs px-3.5 py-2 rounded-xl font-bold cursor-pointer shadow-md flex items-center gap-1 active:scale-95">
-                            <span>📷 + เพิ่มรูปภาพ</span>
-                            <input type="file" id="phone-img-input" accept="image/*" multiple onchange="handlePhoneImageUpload(this)" class="hidden">
-                        </label>
+                        <!-- Image Upload & URL Link Buttons -->
+                        <div class="flex items-center gap-1.5">
+                            <label class="bg-[#EE4D2D] hover:bg-[#d73211] text-white text-xs px-3 py-1.5 rounded-xl font-bold cursor-pointer shadow-md flex items-center gap-1 active:scale-95">
+                                <span>📷 + ไฟล์รูป</span>
+                                <input type="file" id="phone-img-input" accept="image/*" multiple onchange="handlePhoneImageUpload(this)" class="hidden">
+                            </label>
+                            <button type="button" onclick="addImageByUrl()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-1.5 rounded-xl font-bold shadow-md flex items-center gap-1 active:scale-95 cursor-pointer">
+                                <span>🔗 + วางลิงก์ URL</span>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Images Thumbnails Grid -->
@@ -1000,6 +1005,18 @@
         }
 
         // Phone Touch Friendly & Auto-Compress to 800px Canvas
+                function addImageByUrl() {
+            const url = prompt("กรุณาวางลิงก์รูปภาพ (URL / Google Drive / Shopee Image / Web Link):");
+            if (!url || !url.trim()) return;
+            const cleanUrl = url.trim();
+            modalImages.push({
+                file: cleanUrl,
+                name: `url_img_${Date.now()}.jpg`,
+                fallback: cleanUrl
+            });
+            renderModalImages();
+        }
+
         function handlePhoneImageUpload(input) {
             const files = Array.from(input.files || []);
             if (files.length === 0) return;
@@ -1010,11 +1027,11 @@
                 reader.onload = function(e) {
                     const img = new Image();
                     img.onload = function() {
-                        // Compress via canvas to max 800px width/height for fast mobile rendering
+                        // Compress image to max 600px width/height (approx 35KB) for instant local saving
                         const canvas = document.createElement("canvas");
                         let w = img.width;
                         let h = img.height;
-                        const maxDim = 800;
+                        const maxDim = 600;
                         if (w > maxDim || h > maxDim) {
                             if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
                             else { w = Math.round(w * maxDim / h); h = maxDim; }
@@ -1023,7 +1040,7 @@
                         canvas.height = h;
                         const ctx = canvas.getContext("2d");
                         ctx.drawImage(img, 0, 0, w, h);
-                        const compressedBase64 = canvas.toDataURL("image/jpeg", 0.82);
+                        const compressedBase64 = canvas.toDataURL("image/jpeg", 0.65);
 
                         modalImages.push({
                             file: compressedBase64,
@@ -1098,10 +1115,16 @@
                 p.fallback_image = modalImages[0].fallback || modalImages[0].file;
             }
 
-            localStorage.setItem("goodstone_products", JSON.stringify(products));
-            closeProductModal();
-            renderInventoryView();
-            alert("💾 บันทึกรูปภาพ ตัวเลือก และลิงก์ Shopee เรียบร้อยแล้วครับ!");
+            try {
+                localStorage.setItem("goodstone_products", JSON.stringify(products));
+                closeProductModal();
+                renderInventoryView();
+                alert("💾 บันทึกรูปภาพและข้อมูลสินค้าเรียบร้อยแล้วครับ!");
+            } catch(e) {
+                alert("⚠️ คำเตือน: ไฟล์รูปภาพยังมีขนาดใหญ่เกินไป ลองใช้รูปภาพที่เล็กลง หรือกดปุ่ม '+ วางลิงก์ URL' ครับ");
+                closeProductModal();
+                renderInventoryView();
+            }
         }
 
         function updateVATMonitor() {
