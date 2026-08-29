@@ -728,6 +728,7 @@
                     listenToCloudProducts(cloudProducts => {
                         if (cloudProducts && Array.isArray(cloudProducts) && cloudProducts.length > 0) {
                             products = cloudProducts;
+                            localStorage.setItem("goodstone_products", JSON.stringify(cloudProducts));
                             renderCatalogGrid();
                             if (selectedProduct) {
                                 const updated = products.find(p => p.id === selectedProduct.id);

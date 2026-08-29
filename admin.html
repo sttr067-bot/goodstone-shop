@@ -730,8 +730,17 @@
 
             // Connect to Cloud Database in real-time
             if (typeof initCloudDatabase === "function") {
-                initCloudDatabase(() => {
-                    updateCloudUI();
+                initCloudDatabase((db) => {
+                    if (db) {
+                        // If cloud products are empty, auto-push existing PC products to Cloud!
+                        db.ref("products").once("value", snapshot => {
+                            const val = snapshot.val();
+                            if (!val || !Array.isArray(val) || val.length === 0) {
+                                console.log("☁️ Cloud DB empty, auto-seeding products from PC to Cloud...");
+                                syncProductsToCloud(cleanProductsForStorage(products));
+                            }
+                        });
+                    }
                     listenToCloudProducts(cloudProducts => {
                         if (cloudProducts && Array.isArray(cloudProducts) && cloudProducts.length > 0) {
                             products = cleanProductsForStorage(cloudProducts);
