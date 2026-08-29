@@ -174,7 +174,7 @@
             </div>
 
             <!-- Mobile Navigation Tab Buttons (4 Tabs) -->
-            <div class="grid grid-cols-4 gap-1 pb-2.5 pt-0.5">
+            <div class="grid grid-cols-4 sm:grid-cols-5 gap-1 pb-2.5 pt-0.5">
                 <button onclick="switchTab('ORDERS')" id="tab-btn-orders" class="py-2 px-0.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all text-center bg-[#EE4D2D] text-white shadow-md">
                     📦 คำสั่งซื้อ
                 </button>
@@ -186,6 +186,9 @@
                 </button>
                 <button onclick="switchTab('VAT')" id="tab-btn-vat" class="py-2 px-0.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all text-center app-tab-inactive hover:text-[#EE4D2D]">
                     📈 ภาษี (1.8M)
+                </button>
+                <button onclick="switchTab('CLOUD')" id="tab-btn-cloud" class="col-span-4 sm:col-span-1 py-2 px-1 rounded-xl text-[11px] sm:text-xs font-bold transition-all text-center app-tab-inactive hover:text-[#EE4D2D] border border-dashed border-[#EE4D2D]/40 mt-1 sm:mt-0">
+                    ☁️ ซิงก์คอม+มือถือ (Cloud)
                 </button>
             </div>
         </div>
@@ -419,6 +422,69 @@
             </div>
         </div>
 
+    
+        <!-- ================= TAB 5: CLOUD DATABASE SYNC ================= -->
+        <div id="tab-cloud" class="space-y-6 hidden">
+            <!-- Connection Status Card -->
+            <div class="app-card p-5 sm:p-6 rounded-3xl border-2 app-border shadow-sm space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl">☁️</span>
+                            <h2 class="text-base sm:text-lg font-black app-text-main">ระบบซิงก์ Cloud Database (เชื่อมต่อทุกอุปกรณ์)</h2>
+                            <span id="cloud-badge-status" class="bg-amber-500/10 text-amber-500 border border-amber-500/30 text-[10px] px-2.5 py-0.5 rounded-full font-bold">
+                                ⏳ กำลังตรวจสอบ
+                            </span>
+                        </div>
+                        <p class="text-xs app-text-muted leading-relaxed">
+                            เชื่อมต่อฐานข้อมูล Real-time ทำให้เมื่อคุณแก้ไขสินค้าบนคอม ข้อมูลบนมือถือและลูกค้าทุกคนจะเปลี่ยนตามทันทีโดยไม่ต้องอัปไฟล์ขึ้น GitHub!
+                        </p>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button onclick="manualPushProductsToCloud()" class="bg-[#EE4D2D] hover:bg-[#d73211] text-white font-black px-4 py-2.5 rounded-2xl text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer">
+                            <span>🚀 ส่งข้อมูลจากคอมขึ้น Cloud ทันที</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Config Input Box -->
+                <div class="bg-[#FAF7F2] dark:bg-slate-900/50 p-4 rounded-2xl border border-[#EBE3D5] dark:border-slate-800 space-y-3">
+                    <label class="text-xs font-bold app-text-main block">
+                        🔑 รหัสเชื่อมต่อ Firebase Config (วาง JSON หรือ Firebase Database URL ที่นี่):
+                    </label>
+                    <textarea id="firebase-config-input" rows="4" placeholder='วางโค้ด Firebase Config เช่น:&#10;{
+  "apiKey": "AIzaSy...",
+  "databaseURL": "https://goodstone-shop-default-rtdb.firebaseio.com",
+  "projectId": "goodstone-shop"
+}' class="w-full bg-white dark:bg-slate-800 border border-[#EBE3D5] dark:border-slate-700 rounded-xl p-3 text-xs font-mono app-text-main focus:ring-2 focus:ring-[#EE4D2D] focus:outline-none"></textarea>
+                    
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="saveCloudConfig()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-sm transition-all active:scale-95 cursor-pointer">
+                                💾 บันทึกการเชื่อมต่อ Cloud
+                            </button>
+                            <button type="button" onclick="testCloudConnection()" class="app-card-subtle hover:bg-slate-200 dark:hover:bg-slate-700 app-text-main border app-border font-bold px-3 py-2 rounded-xl text-xs transition-all active:scale-95 cursor-pointer">
+                                🔄 ทดสอบเชื่อมต่อ
+                            </button>
+                        </div>
+                        <span id="cloud-save-msg" class="text-xs font-bold text-emerald-500 hidden"></span>
+                    </div>
+                </div>
+
+                <!-- Step-by-step Setup Guide -->
+                <div class="pt-3 border-t app-border-subtle space-y-3 text-xs app-text-muted">
+                    <h3 class="font-black app-text-main text-sm">📖 วิธีรับ Firebase Config ฟรีใน 2 นาที (ทำครั้งเดียวใช้ได้ตลอดไป):</h3>
+                    <ol class="list-decimal list-inside space-y-2 leading-relaxed">
+                        <li>เปิดเว็บ <a href="https://console.firebase.google.com" target="_blank" class="text-[#EE4D2D] font-bold underline">console.firebase.google.com</a> (ล็อกอินด้วยบัญชี Google ของคุณ — ฟรี 100%)</li>
+                        <li>กดปุ่ม <strong>"Add project" (สร้างโปรเจกต์)</strong> → ตั้งชื่อ เช่น <code class="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono">goodstone-shop</code> แล้วกด Create</li>
+                        <li>ในเมนูด้านซ้าย เลือก <strong>"Build" → "Realtime Database"</strong> → กด <strong>"Create Database"</strong> (เลือก Start in test mode เพื่อให้อ่าน/เขียนได้)</li>
+                        <li>ไปที่ <strong>Project Settings (รูปฟันเฟืองมุมซ้ายบน)</strong> → เลื่อนลงมาที่ <strong>"Your apps"</strong> → กดสร้าง Web App <code class="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono">&lt;/&gt;</code> → คัดลอกโค้ด <strong>firebaseConfig</strong> มาวางในช่องด้านบนแล้วกด "บันทึก" ได้ทันทีครับ!</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <!-- ================= EDIT PRODUCT MODAL (MOBILE TOUCH FRIENDLY) ================= -->
@@ -603,9 +669,116 @@
             }
         }
 
+        
+        // ================= CLOUD SYNC UI HELPERS =================
+        function updateCloudUI() {
+            const badge = document.getElementById("cloud-badge-status");
+            const input = document.getElementById("firebase-config-input");
+            const saved = localStorage.getItem("goodstone_firebase_config");
+            if (saved && input && !input.value) {
+                try {
+                    input.value = JSON.stringify(JSON.parse(saved), null, 2);
+                } catch(e) { input.value = saved; }
+            }
+
+            if (isCloudConnected) {
+                if (badge) {
+                    badge.className = "bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 text-[10px] px-2.5 py-0.5 rounded-full font-bold";
+                    badge.innerText = "🟢 เชื่อมต่อ Cloud สำเร็จ (ซิงก์ Real-time ทุกเครื่อง)";
+                }
+            } else {
+                if (badge) {
+                    badge.className = "bg-amber-500/10 text-amber-500 border border-amber-500/30 text-[10px] px-2.5 py-0.5 rounded-full font-bold";
+                    badge.innerText = "🔴 ยังไม่ได้เชื่อมต่อ Cloud (ทำงานแบบ Local เครื่องนี้)";
+                }
+            }
+        }
+
+        function onCloudStatusChange(connected, errMsg) {
+            updateCloudUI();
+            if (connected) {
+                console.log("🟢 Cloud Database Ready!");
+            }
+        }
+
+        function saveCloudConfig() {
+            const val = document.getElementById("firebase-config-input").value.trim();
+            if (!val) {
+                localStorage.removeItem("goodstone_firebase_config");
+                alert("ลบการตั้งค่า Cloud แล้ว (ระบบจะทำงานแบบ Local)");
+                location.reload();
+                return;
+            }
+
+            try {
+                let parsedConfig = null;
+                // If user pasted a full JS object or JSON
+                if (val.startsWith("{")) {
+                    parsedConfig = JSON.parse(val);
+                } else if (val.includes("apiKey")) {
+                    // Extract JSON from js snippet
+                    const jsonStr = val.substring(val.indexOf("{"), val.lastIndexOf("}") + 1);
+                    parsedConfig = JSON.parse(jsonStr);
+                } else {
+                    alert("รูปแบบข้อมูลไม่ถูกต้อง กรุณาวางโค้ด Firebase Config ในรูปแบบ JSON ครับ");
+                    return;
+                }
+
+                localStorage.setItem("goodstone_firebase_config", JSON.stringify(parsedConfig));
+                alert("✅ บันทึกการตั้งค่า Cloud สำเร็จ! กำลังรีโหลดหน้าเพื่อเชื่อมต่อ...");
+                location.reload();
+            } catch(e) {
+                alert("เกิดข้อผิดพลาดในการแปลงข้อมูล: " + e.message + "\nกรุณาตรวจสอบว่าวาง JSON ถูกต้องครบถ้วนครับ");
+            }
+        }
+
+        function testCloudConnection() {
+            if (isCloudConnected) {
+                alert("🟢 เชื่อมต่อ Cloud Database สำเร็จแล้วครับ! ข้อมูลพร้อมซิงก์แบบ Real-time");
+            } else {
+                alert("🔴 ยังไม่ได้เชื่อมต่อ Cloud กรุณาตรวจสอบการตั้งค่า Firebase Config ครับ");
+            }
+        }
+
+        async function manualPushProductsToCloud() {
+            if (!isCloudConnected) {
+                alert("⚠️ ยังไม่ได้เชื่อมต่อ Cloud Database! กรุณาตั้งค่า Firebase ด้านล่างก่อนครับ");
+                return;
+            }
+            if (!confirm("ต้องการส่งข้อมูลสินค้าทั้งหมดจากคอมพิวเตอร์เครื่องนี้ขึ้น Cloud เพื่อให้มือถือและลูกค้าทุกคนเห็นข้อมูลใหม่ทันทีใช่หรือไม่?")) return;
+
+            const cleaned = cleanProductsForStorage(products);
+            const success = await syncProductsToCloud(cleaned);
+            if (success) {
+                alert("🎉 ส่งข้อมูลสินค้าขึ้น Cloud สำเร็จ 100%!\n\nตอนนี้มือถือทุกเครื่องและลูกค้าทุกคนที่เปิดเว็บ จะเห็นรูปและราคาสินค้าใหม่ตรงกันทันทีครับ!");
+            } else {
+                alert("❌ เกิดข้อผิดพลาดในการส่งข้อมูลขึ้น Cloud กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตหรือสิทธิ์ Firebase ครับ");
+            }
+        }
+
         function init() {
             initAuthCheck();
             lucide.createIcons();
+
+            // Connect to Cloud Database in real-time
+            if (typeof initCloudDatabase === "function") {
+                initCloudDatabase(() => {
+                    updateCloudUI();
+                    listenToCloudProducts(cloudProducts => {
+                        if (cloudProducts && Array.isArray(cloudProducts) && cloudProducts.length > 0) {
+                            products = cleanProductsForStorage(cloudProducts);
+                            renderInventoryView();
+                        }
+                    });
+                    listenToCloudOrders(cloudOrders => {
+                        if (cloudOrders && Array.isArray(cloudOrders)) {
+                            orders = cloudOrders;
+                            renderOrdersView();
+                            updateVATMonitor();
+                        }
+                    });
+                });
+            }
 
             const savedProds = localStorage.getItem("goodstone_products");
             if (savedProds) {
@@ -648,12 +821,16 @@
             const tabGoship = document.getElementById("tab-goship");
             if (tabGoship) tabGoship.classList.add("hidden");
             document.getElementById("tab-vat").classList.add("hidden");
+            const tabCloud = document.getElementById("tab-cloud");
+            if (tabCloud) tabCloud.classList.add("hidden");
 
             document.getElementById("tab-btn-orders").className = "py-2 px-0.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all text-center app-tab-inactive hover:text-[#EE4D2D]";
             document.getElementById("tab-btn-inventory").className = "py-2 px-0.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all text-center app-tab-inactive hover:text-[#EE4D2D]";
             const btnGoship = document.getElementById("tab-btn-goship");
             if (btnGoship) btnGoship.className = "py-2 px-0.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all text-center app-tab-inactive hover:text-[#EE4D2D]";
             document.getElementById("tab-btn-vat").className = "py-2 px-0.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all text-center app-tab-inactive hover:text-[#EE4D2D]";
+            const btnCloud = document.getElementById("tab-btn-cloud");
+            if (btnCloud) btnCloud.className = "col-span-4 sm:col-span-1 py-2 px-1 rounded-xl text-[11px] sm:text-xs font-bold transition-all text-center app-tab-inactive hover:text-[#EE4D2D] border border-dashed border-[#EE4D2D]/40 mt-1 sm:mt-0";
 
             if (tab === "ORDERS") {
                 document.getElementById("tab-orders").classList.remove("hidden");
@@ -1166,9 +1343,15 @@
             try {
                 products = cleanProductsForStorage(products);
                 localStorage.setItem("goodstone_products", JSON.stringify(products));
+                
+                // Push to Cloud Database in real-time
+                if (typeof syncProductsToCloud === "function" && isCloudConnected) {
+                    syncProductsToCloud(products);
+                }
+
                 closeProductModal();
                 renderInventoryView();
-                alert("💾 บันทึกรูปภาพและข้อมูลสินค้าเรียบร้อยแล้วครับ!");
+                alert("💾 บันทึกรูปภาพและข้อมูลสินค้าเรียบร้อยแล้วครับ!" + (isCloudConnected ? " (ซิงก์ขึ้น Cloud ไปยังมือถือทุกเครื่องทันที ☁️)" : ""));
             } catch(e) {
                 console.error("LocalStorage save error:", e);
                 alert("⚠️ บันทึกไม่สำเร็จ: ความจำเบราว์เซอร์เต็ม กรุณาลบรูปภาพที่ไม่ใช้ออกบ้างครับ");

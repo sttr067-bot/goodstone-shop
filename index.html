@@ -38,6 +38,11 @@
     </script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="thai_postal_db.js"></script>
+    <!-- Firebase SDK (Real-time Cloud Database) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="firebase-sync.js"></script>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
         <style>
@@ -716,6 +721,25 @@
             applyTheme(currentTheme);
             lucide.createIcons();
             loadFullPostalDB();
+
+            // Connect to Cloud Database in real-time
+            if (typeof initCloudDatabase === "function") {
+                initCloudDatabase(() => {
+                    listenToCloudProducts(cloudProducts => {
+                        if (cloudProducts && Array.isArray(cloudProducts) && cloudProducts.length > 0) {
+                            products = cloudProducts;
+                            renderCatalogGrid();
+                            if (selectedProduct) {
+                                const updated = products.find(p => p.id === selectedProduct.id);
+                                if (updated) {
+                                    selectedProduct = updated;
+                                    renderProductCheckoutDetail();
+                                }
+                            }
+                        }
+                    });
+                });
+            }
 
             const savedProducts = localStorage.getItem("goodstone_products");
             if (savedProducts) {
