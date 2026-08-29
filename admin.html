@@ -670,6 +670,38 @@
         }
 
         
+        
+        // ================= THEME CONTROLLER (LIGHT / DARK) =================
+        let currentTheme = localStorage.getItem("goodstone_admin_theme") || "light";
+
+        function applyTheme(theme) {
+            currentTheme = theme;
+            document.documentElement.setAttribute("data-theme", theme);
+            document.body.setAttribute("data-theme", theme);
+            if (theme === "dark") {
+                document.documentElement.classList.add("dark");
+                document.documentElement.classList.remove("light");
+                document.body.classList.add("dark");
+                document.body.classList.remove("light");
+            } else {
+                document.documentElement.classList.add("light");
+                document.documentElement.classList.remove("dark");
+                document.body.classList.add("light");
+                document.body.classList.remove("dark");
+            }
+            localStorage.setItem("goodstone_admin_theme", theme);
+
+            const icon = document.getElementById("theme-toggle-icon");
+            const text = document.getElementById("theme-toggle-text");
+            if (icon) icon.innerText = theme === "dark" ? "☀️" : "🌙";
+            if (text) text.innerText = theme === "dark" ? "โหมดสว่าง" : "โหมดมืด";
+        }
+
+        function toggleTheme() {
+            const next = currentTheme === "dark" ? "light" : "dark";
+            applyTheme(next);
+        }
+
         // ================= CLOUD SYNC UI HELPERS =================
         function updateCloudUI() {
             const badge = document.getElementById("cloud-badge-status");
@@ -758,6 +790,7 @@
 
         function init() {
             initAuthCheck();
+            applyTheme(currentTheme);
             lucide.createIcons();
 
             // Connect to Cloud Database in real-time
@@ -848,6 +881,10 @@
                 document.getElementById("tab-vat").classList.remove("hidden");
                 document.getElementById("tab-btn-vat").className = "py-2 px-0.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all text-center bg-[#EE4D2D] text-white shadow-md";
                 updateVATMonitor();
+            } else if (tab === "CLOUD") {
+                if (tabCloud) tabCloud.classList.remove("hidden");
+                if (btnCloud) btnCloud.className = "col-span-4 sm:col-span-1 py-2 px-1 rounded-xl text-[11px] sm:text-xs font-bold transition-all text-center bg-[#EE4D2D] text-white shadow-md border-none";
+                updateCloudUI();
             }
         }
 
